@@ -1,0 +1,14 @@
+{
+  "name": "html",
+  "type": "htl",
+  "contentType": "html",
+  "cgi": false,
+  "entryFile": "/Users/cmillar/Sites/source/helix-reviews/.hlx/pages/master/src/html.htl",
+  "main": "/Users/cmillar/Sites/source/helix-reviews/.hlx/build/src/html.js",
+  "buildDir": "/Users/cmillar/Sites/source/helix-reviews/.hlx/build/src",
+  "infoFile": "/Users/cmillar/Sites/source/helix-reviews/.hlx/build/src/html.info.json",
+  "pre": "../../pages/master/src/html.pre.js",
+  "pipe": "@adobe/helix-pipeline/src/defaults/html.pipe.js",
+  "sourceMap": "/Users/cmillar/Sites/source/helix-reviews/.hlx/build/src/html.script.js.map",
+  "scriptFile": "/Users/cmillar/Sites/source/helix-reviews/.hlx/build/src/html.script.js"
+}
