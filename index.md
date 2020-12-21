@@ -1,4 +1,4 @@
-<h1>Rate Me</h1>
+<h1>Review Me</h1>
 <form data-sheet="https://adobe-my.sharepoint.com/:x:/r/personal/cmillar_adobe_com/Documents/Helix%20Demos/dc-rating-submissions.xlsx?d=w9d7427d7a9814408846078023a361d06&csf=1&web=1&e=GkX4Kc" data-review-location="dc-rating-submissions" locale="en-US">
   <fieldset>
       <input type="radio" name="rating" value="1" />
