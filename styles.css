@@ -1,40 +1,32 @@
-fieldset {
+.hlx-Review-ratingFields, .hlx-Review-commentFields {
     padding: 0;
     margin: 0;
     border: none;
     display: flex;
 }
 
-input {
+.hlx-Review-ratingFields input[name="rating"] {
     margin: 0;
     background-image: url(img/star-outline.svg);
     appearance: none;
     width: 24px;
-    height: 25px;
+    height: 24px;
 }
 
-label {
+.hlx-Review-ratingFields label {
     appearance: none;
     visibility: collapse;
     width: 0;
 }
 
-input,
-fieldset:hover input:hover + label + input,
-fieldset:hover input:hover + label + input + label + input,
-fieldset:hover input:hover + label + input + label + input + label + input,
-fieldset:hover input:hover + label + input + label + input + label + input + label + input {
-    background-image: url(img/star-outline.svg);
-}
-
-fieldset:hover input {
+.hlx-Review-ratingFields input[name="rating"].is-Active {
     background-image: url(img/star-filled.svg);
 }
 
-fieldset textarea {
+.hlx-Review-commentFields {
     display: none;
 }
 
-textarea.is-Visible {
+.hlx-Review-commentFields.is-Visible {
     display: initial;
 }
