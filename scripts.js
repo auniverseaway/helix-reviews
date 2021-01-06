@@ -95,7 +95,7 @@ const setRadioUx = (radios, value = 0, wasClicked) => {
 const setTotalReviewUx = (statsEl, reviewData, form) => {
     const { reviewLocation } = form.dataset;
     try {
-        const resPromise = fetch(`http://localhost:3000/${reviewLocation}.json`);
+        const resPromise = fetch(`/${reviewLocation}.json`);
         resPromise.then((res) => {
             if (res.ok) {
                 res.json().then((reviewRes) => {
