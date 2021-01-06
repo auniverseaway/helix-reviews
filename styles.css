@@ -52,6 +52,7 @@ h3 {
 }
 
 .hlx-Review-commentFields.is-Visible {
+    display: initial;
     margin-left: 19px;
 }
 
