@@ -25,8 +25,27 @@
 
 .hlx-Review-commentFields {
     display: none;
+    position: relative;
 }
 
-.hlx-Review-commentFields.is-Visible {
+.hlx-Review-commentFields input[type="submit"] {
+    position: absolute;
+    right: 6px;
+    bottom: 10px;
+    background: transparent;
+    border: none;
+    appearance: none;
+}
+
+textarea#rating-comments {
+    border-radius: 4px;
+}
+
+.hlx-Review-commentFields.is-Visible,
+.hlx-ReviewStats.is-Visible {
     display: initial;
+}
+
+.hlx-ReviewStats {
+    display: none;
 }

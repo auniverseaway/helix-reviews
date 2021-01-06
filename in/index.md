@@ -1,5 +1,5 @@
 <h3>Rate Your Experience</h3>
-<form class="hlx-Review" data-sheet="https://adobe-my.sharepoint.com/:x:/r/personal/cmillar_adobe_com/Documents/Helix%20Demos/dc-review/dc-rating-submissions.xlsx?d=w50f968f3f02b482191ab195233b8b70f&csf=1&web=1&e=vxOJ6I" data-review-location="dc-rating-submissions" data-locale="en-US">
+<form class="hlx-Review" data-sheet="https://adobe-my.sharepoint.com/:x:/r/personal/cmillar_adobe_com/Documents/Helix%20Demos/dc-review/dc-rating-submissions.xlsx?d=w50f968f3f02b482191ab195233b8b70f&csf=1&web=1&e=vxOJ6I" data-review-location="dc-rating-submissions" data-locale="en-IN">
     <fieldset class="hlx-Review-ratingFields">
         <input type="radio" name="rating" value="1" />
         <label for="rating-1">1</label>
@@ -24,5 +24,5 @@
     <span class="hlx-ReviewStats-outOf">5</span>
     <span class="hlx-ReviewStats-separator">-</span>
     <span class="hlx-ReviewStats-total"></span>
-    <span class="hlx-ReviewStats-vote">votes</span>
+    <span class="hlx-ReviewStats-vote">Votes</span>
 </div>

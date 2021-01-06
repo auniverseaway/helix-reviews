@@ -1,51 +1,140 @@
-const postURL = 'https://ccgrowth.servicebus.windows.net/formsink/messages';
-const postAuth = 'SharedAccessSignature sr=https%3A%2F%2Fccgrowth.servicebus.windows.net%2Fformsink%2Fmessages&sig=RFndMU%2FyHZrlchNBfHlIdulld4URAgUAQdAlqVLf1Bw%3D&se=1634259041&skn=send';
-const testURL = 'https://adobeioruntime.net/api/v1/web/helix-clients/ccgrowth/forms-handler@v1';
+const PROD_URL = 'https://ccgrowth.servicebus.windows.net/formsink/messages';
+const POST_AUTH = 'SharedAccessSignature sr=https%3A%2F%2Fccgrowth.servicebus.windows.net%2Fformsink%2Fmessages&sig=RFndMU%2FyHZrlchNBfHlIdulld4URAgUAQdAlqVLf1Bw%3D&se=1634259041&skn=send';
+const TEST_URL = 'https://adobeioruntime.net/api/v1/web/helix-clients/ccgrowth/forms-handler@v1';
+const COMMENT_THRESHOLD = 3;
 
 const getDate = () => {
     return new Date().toISOString().replace(/[TZ]/g, ' ').split('.')[0].trim();
 };
 
-const getForm = (el) => {
-    return el.closest('form');
-}
+const getRating = (form) => {
+    return form.dataset.rating || 0;
+};
 
-const sendRequest = (target) => {
-    const form = getForm(target);
-    const { sheet , locale } = form.dataset;
+const getReviewData = (form) => {
+    const { localStorage } = window;
+    const { reviewLocation } = form.dataset;
+    const reviewData = localStorage.getItem(reviewLocation);
+    try {
+        // This will return null if the local storage object is empty.
+        return JSON.parse(reviewData);
+    } catch(e) {
+        // Catch in case someone set something weird in our local storage.
+        return (null);
+    }
+};
+
+const setReviewData = (reviewLocation, value, form) => {
+    const { localStorage } = window;
+    const { total } = form.dataset;
+    const totalRev = parseFloat(total) + 1;
+    const reviewData = { currentRating: value, total: totalRev };
+    localStorage.setItem(reviewLocation, JSON.stringify(reviewData));
+};
+
+const getComments = (form) => {
+    const textarea = form.querySelector('textarea');
+    return textarea.value;
+};
+
+const sendRequest = async (value, form) => {
+    const { sheet, locale, reviewLocation } = form.dataset;
 
     const data = [
-        { name: 'timestamp', value: getDate() },
-        { name: 'Rating', value: target.value },
-        { name: 'Locale', value: locale }
+        { name: 'Timestamp', value: getDate() },
+        { name: 'Rating', value: value },
+        { name: 'Locale', value: locale },
     ];
+
+    // If they are not a happy customer, get their feedback.
+    if (value <= COMMENT_THRESHOLD) {
+        data.push({ name: 'Comment', value: getComments(form) });
+    }
 
     const body = { sheet, data };
 
-    fetch(postURL, {
+    // The response can take a while,
+    // set submitted before we know we're ok.
+    form.setAttribute('data-rating', value);
+
+    const res = await fetch(TEST_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': postAuth,
+          'Authorization': POST_AUTH,
         },
         body: JSON.stringify(body),
     });
-};
 
-const showComments = (radio) => {
-    const form = radio.closest('form');
-    const textarea = form.querySelector('.hlx-Review-commentFields');
-    textarea.classList.add('is-Visible');
-};
-
-const radioClicked = (e) => {
-    const { value } = e.target;
-    if (value <= 2) {
-        showComments(e.target);
-    } else {
-        sendRequest(e.target);
+    if (res.ok) {
+        console.log(res.text());
+        setReviewData(reviewLocation, value, form);
     }
-    e.target.classList.add('is-Clicked');
+};
+
+const showComments = (form, value) => {
+    const clickEvent = (e) => {
+        e.preventDefault();
+        sendRequest(value, form);
+        form.removeEventListener('click', clickEvent);
+    };
+    const commentFieldset = form.querySelector('.hlx-Review-commentFields');
+    commentFieldset.classList.add('is-Visible');
+    const submitEl = form.querySelector('.hlx-Review-commentFields input[type="submit"]');
+    submitEl.addEventListener('click', clickEvent);
+};
+
+const setRadioUx = (radios, value = 0, wasClicked) => {
+    radios.forEach((radio) => {
+        radio.value <= value ?
+            radio.classList.add('is-Active') :
+            radio.classList.remove('is-Active');
+        if (wasClicked) {
+            radio.classList.remove('is-Clicked');
+        }
+    });
+};
+
+const setTotalReviewUx = async (statsEl, reviewData, form) => {
+    const { reviewLocation } = form.dataset;
+    try {
+        const res = await fetch(`http://localhost:3000/${reviewLocation}.json`);
+        const reviewRes = await res.json();
+        const { average, total } = reviewRes.data[0];
+
+        // Compare the local storage count to our server count. Highest wins.
+        let localTotal = 0;
+        if (reviewData) {
+            localTotal = reviewData.total;
+        }
+        const totalReviews = localTotal > total ? localTotal : total;
+        form.setAttribute('data-total', totalReviews);
+
+        // Get the elements
+        const averageEl = statsEl.querySelector('.hlx-ReviewStats-average');
+        const totalEl = statsEl.querySelector('.hlx-ReviewStats-total');
+        
+        // Set their content
+        averageEl.innerHTML = average;
+        totalEl.innerHTML = totalReviews;
+
+        // Show the totals
+        statsEl.classList.add('is-Visible');
+    } catch {
+        console.log('The review response was not proper JSON.');
+    }
+};
+
+const radioClicked = (el, form, rateRadios) => {
+    const { value } = el;
+    if (value <= COMMENT_THRESHOLD) {
+        form.setAttribute('data-rating', value);
+        setRadioUx(rateRadios, value, true);
+        showComments(form, value);
+    } else {
+        sendRequest(el.value, form);
+    }
+    el.classList.add('is-Clicked');
 };
 
 /**
@@ -59,17 +148,26 @@ const radioClicked = (e) => {
 const formHovered = (el, radios) => {
     const { name, value } = el;
     if (name === 'rating') {
-        radios.forEach((radio) => {
-            radio.value <= value ?
-                radio.classList.add('is-Active') :
-                radio.classList.remove('is-Active');
-        });
+        setRadioUx(radios, value, false);
     }
 };
 
-const formLeft = (radios) => {
-    radios.forEach((radio) => {
-        radio.classList.remove('is-Active');
+const setupEvents = (form, rateRadios) => {
+    // Setup hover and leave event
+    // This is purely for UX.
+    form.addEventListener('mouseover', function(e) {
+        formHovered(e.target, rateRadios);
+    });
+    form.addEventListener('mouseleave', function(e) {
+        // Reset the clicked rating on mouse out
+        setRadioUx(rateRadios, getRating(form));
+    });
+
+    // Setup click event
+    rateRadios.forEach((radio) => {
+        radio.addEventListener('click', (e) => {
+            radioClicked(e.target, form, rateRadios);
+        });
     });
 };
 
@@ -77,21 +175,18 @@ const setupReview = () => {
     const reviewForms = document.querySelectorAll('.hlx-Review');
     reviewForms.forEach((form) => {
         const rateRadios = form.querySelectorAll('input[type="radio"]');
+        const statsEl = form.nextElementSibling;
+        const reviewData = getReviewData(form);
 
-        // Setup hover and leave event
-        // This is purely for UX.
-        form.addEventListener('mouseover', function(e) {
-            formHovered(e.target, rateRadios);
-        });
+        if (!reviewData) {
+            setupEvents(form, rateRadios);
+        } else {
+            form.setAttribute('data-rating', reviewData.currentRating);
+            setRadioUx(rateRadios, reviewData.currentRating);
+        }
 
-        form.addEventListener('mouseleave', function(e) {
-            formLeft(rateRadios);
-        });
-
-        // Setup click event
-        rateRadios.forEach((radio) => {
-            radio.addEventListener('click', radioClicked);
-        });
+        // Always set total review count
+        setTotalReviewUx(statsEl, reviewData, form);
     });
 };
 
@@ -105,6 +200,17 @@ const setupMarkdownJank = () => {
         form.classList.add('hlx-Review');
         form.querySelector('fieldset:first-of-type').classList.add('hlx-Review-ratingFields');
         form.querySelector('fieldset:last-of-type').classList.add('hlx-Review-commentFields');
+
+        const pre = 'hlx-ReviewStats';
+
+        const reviewStats = form.nextElementSibling;
+        reviewStats.classList.add(pre);
+        reviewStats.querySelector('span:nth-child(1)').classList.add(`${pre}-average`);
+        reviewStats.querySelector('span:nth-child(2)').classList.add(`${pre}-separator`);
+        reviewStats.querySelector('span:nth-child(3)').classList.add(`${pre}-outOf`);
+        reviewStats.querySelector('span:nth-child(4)').classList.add(`${pre}-separator`);
+        reviewStats.querySelector('span:nth-child(5)').classList.add(`${pre}-total`);
+        reviewStats.querySelector('span:nth-child(6)').classList.add(`${pre}-vote`);
     });
 };
 
