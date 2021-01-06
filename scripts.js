@@ -98,7 +98,7 @@ const setRadioUx = (radios, value = 0, wasClicked) => {
 const setTotalReviewUx = async (statsEl, reviewData, form) => {
     const { reviewLocation } = form.dataset;
     try {
-        const res = await fetch(`http://localhost:3000/${reviewLocation}.json`);
+        const res = await fetch(`/${reviewLocation}.json`);
         const reviewRes = await res.json();
         const { average, total } = reviewRes.data[0];
 
