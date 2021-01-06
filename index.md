@@ -1,3 +1,4 @@
+<div class="hlx-ReviewWrapper">
 <h3>Rate Your Experience</h3>
 <form class="hlx-Review" data-sheet="https://adobe-my.sharepoint.com/:x:/r/personal/cmillar_adobe_com/Documents/Helix%20Demos/dc-review/dc-rating-submissions.xlsx?d=w50f968f3f02b482191ab195233b8b70f&csf=1&web=1&e=rBAEQG" data-review-location="dc-rating-submissions" data-locale="en-US">
     <fieldset class="hlx-Review-ratingFields">
@@ -13,8 +14,8 @@
         <label for="rating-5">5</label>
     </fieldset>
     <fieldset class="hlx-Review-commentFields">
-        <label for="rating-comments">Leave a comment</label>
-        <textarea id="rating-comments" name="rating-comments" rows="4" cols="50"></textarea>
+        <label for="rating-comments"></label>
+        <textarea id="rating-comments" name="rating-comments"></textarea>
         <input type="submit" value="Send">
     </fieldset>
 </form>
@@ -25,4 +26,5 @@
     <span class="hlx-ReviewStats-separator">-</span>
     <span class="hlx-ReviewStats-total"></span>
     <span class="hlx-ReviewStats-vote">votes</span>
+</div>
 </div>

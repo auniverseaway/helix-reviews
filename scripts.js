@@ -1,15 +1,10 @@
-const PROD_URL = 'https://ccgrowth.servicebus.windows.net/formsink/messages';
 const POST_AUTH = 'SharedAccessSignature sr=https%3A%2F%2Fccgrowth.servicebus.windows.net%2Fformsink%2Fmessages&sig=RFndMU%2FyHZrlchNBfHlIdulld4URAgUAQdAlqVLf1Bw%3D&se=1634259041&skn=send';
 const TEST_URL = 'https://adobeioruntime.net/api/v1/web/helix-clients/ccgrowth/forms-handler@v1';
 const COMMENT_THRESHOLD = 3;
 
-const getDate = () => {
-    return new Date().toISOString().replace(/[TZ]/g, ' ').split('.')[0].trim();
-};
+const getDate = () => new Date().toISOString().replace(/[TZ]/g, ' ').split('.')[0].trim();
 
-const getRating = (form) => {
-    return form.dataset.rating || 0;
-};
+const getRating = form => form.dataset.rating || 0;
 
 const getReviewData = (form) => {
     const { localStorage } = window;
@@ -18,10 +13,15 @@ const getReviewData = (form) => {
     try {
         // This will return null if the local storage object is empty.
         return JSON.parse(reviewData);
-    } catch(e) {
+    } catch (e) {
         // Catch in case someone set something weird in our local storage.
         return (null);
     }
+};
+
+const updateTotal = (statsEl, total) => {
+    const totalEl = statsEl.querySelector('.hlx-ReviewStats-total');
+    totalEl.innerHTML = total;
 };
 
 const setReviewData = (reviewLocation, value, form) => {
@@ -30,6 +30,8 @@ const setReviewData = (reviewLocation, value, form) => {
     const totalRev = parseFloat(total) + 1;
     const reviewData = { currentRating: value, total: totalRev };
     localStorage.setItem(reviewLocation, JSON.stringify(reviewData));
+    const statsEl = form.nextElementSibling;
+    updateTotal(statsEl, totalRev);
 };
 
 const getComments = (form) => {
@@ -37,13 +39,12 @@ const getComments = (form) => {
     return textarea.value;
 };
 
-const sendRequest = async (value, form) => {
-    const { sheet, locale, reviewLocation } = form.dataset;
-
+const sendRequest = (value, form) => {
+    const { sheet, reviewLocation } = form.dataset;
     const data = [
         { name: 'Timestamp', value: getDate() },
-        { name: 'Rating', value: value },
-        { name: 'Locale', value: locale },
+        { name: 'Rating', value },
+        { name: 'Locale', value: document.documentElement.lang },
     ];
 
     // If they are not a happy customer, get their feedback.
@@ -54,22 +55,19 @@ const sendRequest = async (value, form) => {
     const body = { sheet, data };
 
     // The response can take a while,
-    // set submitted before we know we're ok.
+    // set the UI before we know we're ok.
+    // It's just burgers and fries here.
     form.setAttribute('data-rating', value);
+    setReviewData(reviewLocation, value, form);
 
-    const res = await fetch(TEST_URL, {
+    fetch(TEST_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': POST_AUTH,
+            'Content-Type': 'application/json',
+            Authorization: POST_AUTH,
         },
         body: JSON.stringify(body),
     });
-
-    if (res.ok) {
-        console.log(res.text());
-        setReviewData(reviewLocation, value, form);
-    }
 };
 
 const showComments = (form, value) => {
@@ -86,41 +84,44 @@ const showComments = (form, value) => {
 
 const setRadioUx = (radios, value = 0, wasClicked) => {
     radios.forEach((radio) => {
-        radio.value <= value ?
-            radio.classList.add('is-Active') :
-            radio.classList.remove('is-Active');
+        // eslint-disable-next-line no-unused-expressions
+        radio.value <= value ? radio.classList.add('is-Active') : radio.classList.remove('is-Active');
         if (wasClicked) {
             radio.classList.remove('is-Clicked');
         }
     });
 };
 
-const setTotalReviewUx = async (statsEl, reviewData, form) => {
+const setTotalReviewUx = (statsEl, reviewData, form) => {
     const { reviewLocation } = form.dataset;
     try {
-        const res = await fetch(`/${reviewLocation}.json`);
-        const reviewRes = await res.json();
-        const { average, total } = reviewRes.data[0];
+        const resPromise = fetch(`http://localhost:3000/${reviewLocation}.json`);
+        resPromise.then((res) => {
+            if (res.ok) {
+                res.json().then((reviewRes) => {
+                    const { average, total } = reviewRes.data[0];
 
-        // Compare the local storage count to our server count. Highest wins.
-        let localTotal = 0;
-        if (reviewData) {
-            localTotal = reviewData.total;
-        }
-        const totalReviews = localTotal > total ? localTotal : total;
-        form.setAttribute('data-total', totalReviews);
+                    // Compare the local storage count to our server count. Highest wins.
+                    let localTotal = 0;
+                    if (reviewData) {
+                        localTotal = reviewData.total;
+                    }
+                    const totalReviews = localTotal > total ? localTotal : total;
+                    form.setAttribute('data-total', totalReviews);
 
-        // Get the elements
-        const averageEl = statsEl.querySelector('.hlx-ReviewStats-average');
-        const totalEl = statsEl.querySelector('.hlx-ReviewStats-total');
-        
-        // Set their content
-        averageEl.innerHTML = average;
-        totalEl.innerHTML = totalReviews;
+                    // Update the average
+                    const averageEl = statsEl.querySelector('.hlx-ReviewStats-average');
+                    averageEl.innerHTML = average;
 
-        // Show the totals
-        statsEl.classList.add('is-Visible');
-    } catch {
+                    // Update the total
+                    updateTotal(statsEl, totalReviews);
+
+                    // Show the totals
+                    statsEl.classList.add('is-Visible');
+                });
+            }
+        });
+    } catch (e) {
         console.log('The review response was not proper JSON.');
     }
 };
@@ -155,10 +156,10 @@ const formHovered = (el, radios) => {
 const setupEvents = (form, rateRadios) => {
     // Setup hover and leave event
     // This is purely for UX.
-    form.addEventListener('mouseover', function(e) {
+    form.addEventListener('mouseover', (e) => {
         formHovered(e.target, rateRadios);
     });
-    form.addEventListener('mouseleave', function(e) {
+    form.addEventListener('mouseleave', () => {
         // Reset the clicked rating on mouse out
         setRadioUx(rateRadios, getRating(form));
     });
@@ -171,8 +172,8 @@ const setupEvents = (form, rateRadios) => {
     });
 };
 
-const setupReview = () => {
-    const reviewForms = document.querySelectorAll('.hlx-Review');
+const setupReviews = (element) => {
+    const reviewForms = element.querySelectorAll('.hlx-Review');
     reviewForms.forEach((form) => {
         const rateRadios = form.querySelectorAll('input[type="radio"]');
         const statsEl = form.nextElementSibling;
@@ -195,6 +196,8 @@ const setupReview = () => {
  * TODO: remove when there's a proper HTML file
  */
 const setupMarkdownJank = () => {
+    const wrapper = document.querySelector('main > div');
+    wrapper.classList.add('hlx-ReviewWrapper');
     const forms = document.querySelectorAll('form[data-sheet]');
     forms.forEach((form) => {
         form.classList.add('hlx-Review');
@@ -215,4 +218,4 @@ const setupMarkdownJank = () => {
 };
 
 setupMarkdownJank();
-setupReview();
+setupReviews(document);
