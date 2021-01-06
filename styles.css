@@ -34,7 +34,7 @@ h3 {
 
 .hlx-Review-ratingFields input[name = "rating"] {
         margin: 0;
-        background-image: data-uri('image/svg+xml;base64', '../../img/icons/star-outline.svg');
+        background-image: url(img/star-outline.svg);
         background-size: 100%;
         appearance: none;
         width: 30px;
@@ -42,7 +42,7 @@ h3 {
 }
 
 .hlx-Review-ratingFields input[name = "rating"].is-Active {
-        background-image: data-uri('image/svg+xml;base64', '../../img/icons/star-filled.svg');
+    background-image: url(img/star-filled.svg);
 }
 
 .hlx-Review-commentFields {
@@ -98,59 +98,4 @@ h3 {
 .hlx-ReviewStats-separator:first-of-type,
 .hlx-ReviewStats-outOf {
     font-weight: 700;
-}
-
-
-
-
-.hlx-Review-ratingFields, .hlx-Review-commentFields {
-    padding: 0;
-    margin: 0;
-    border: none;
-    display: flex;
-}
-
-.hlx-Review-ratingFields input[name="rating"] {
-    margin: 0;
-    background-image: url(img/star-outline.svg);
-    appearance: none;
-    width: 24px;
-    height: 24px;
-}
-
-.hlx-Review-ratingFields label {
-    appearance: none;
-    visibility: collapse;
-    width: 0;
-}
-
-.hlx-Review-ratingFields input[name="rating"].is-Active {
-    background-image: url(img/star-filled.svg);
-}
-
-.hlx-Review-commentFields {
-    display: none;
-    position: relative;
-}
-
-.hlx-Review-commentFields input[type="submit"] {
-    position: absolute;
-    right: 6px;
-    bottom: 10px;
-    background: transparent;
-    border: none;
-    appearance: none;
-}
-
-textarea#rating-comments {
-    border-radius: 4px;
-}
-
-.hlx-Review-commentFields.is-Visible,
-.hlx-ReviewStats.is-Visible {
-    display: initial;
-}
-
-.hlx-ReviewStats {
-    display: none;
 }
