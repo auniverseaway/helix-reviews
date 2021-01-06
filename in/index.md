@@ -14,8 +14,8 @@
         <label for="rating-5">5</label>
     </fieldset>
     <fieldset class="hlx-Review-commentFields">
-        <label for="rating-comments">Leave a comment</label>
-        <textarea id="rating-comments" name="rating-comments" rows="4" cols="50"></textarea>
+        <label for="rating-comments"></label>
+        <textarea id="rating-comments" name="rating-comments"></textarea>
         <input type="submit" value="Send">
     </fieldset>
 </form>
